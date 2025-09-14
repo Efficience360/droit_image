@@ -3,37 +3,47 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>SCL Studio — Accord diffusion réseaux sociaux</title>
+  <title>SCL Studio — Accord diffusion médias</title>
   <style>
-    body{ margin:0; font-family: system-ui, sans-serif; background:#fffefc; color:#1f2937; padding:20px; }
-    .card{ max-width:650px; margin:0 auto; background:#fff; border:2px solid #facc15; border-radius:16px; padding:20px; box-shadow:0 6px 18px rgba(250,204,21,.22); }
-    h1{ font-size:20px; margin:0 0 10px; color:#92400e; }
-    .sub{ font-size:12px; color:#a16207; margin-bottom:12px }
-    label{ display:block; margin-top:12px; font-size:14px; }
-    input{ width:100%; padding:10px; border:1px solid #eab308; border-radius:8px; background:#fff8e1; font-size:15px; }
-    .legal{ font-size:13px; margin-top:14px; line-height:1.45; }
-    .sig{ margin-top:12px; border:2px dashed #facc15; border-radius:12px; background:#fff8e1; }
+    body{ margin:0; font-family: system-ui, sans-serif; background:#0f172a; color:#f8fafc; padding:20px; }
+    .card{ max-width:700px; margin:0 auto; background:#1e293b; border:2px solid #38bdf8; border-radius:16px; padding:24px; box-shadow:0 6px 18px rgba(56,189,248,.35); }
+    h1{ font-size:22px; margin:0 0 12px; color:#38bdf8; text-align:center; }
+    .sub{ font-size:13px; color:#94a3b8; margin-bottom:16px; text-align:center; }
+    label{ display:block; margin-top:14px; font-size:15px; font-weight:600; color:#e2e8f0; }
+    input, select{ width:100%; padding:10px; border:1px solid #38bdf8; border-radius:8px; background:#0f172a; color:#f1f5f9; font-size:15px; }
+    input:focus, select:focus{ outline:none; border-color:#0ea5e9; box-shadow:0 0 0 2px rgba(14,165,233,.4); }
+    .legal{ font-size:13px; margin-top:18px; line-height:1.5; color:#cbd5e1; background:#0f172a; padding:12px; border-left:3px solid #38bdf8; border-radius:6px; }
+    .sig{ margin-top:16px; border:2px dashed #38bdf8; border-radius:12px; background:#0f172a; }
     .sig canvas{ width:100%; height:180px; display:block; touch-action:none; }
-    .controls{ display:flex; gap:8px; margin-top:6px }
-    button{ margin-top:16px; padding:12px 16px; border:none; border-radius:8px; background:linear-gradient(90deg, #facc15, #fbbf24); color:#78350f; font-weight:700; cursor:pointer; }
-    .ghost{ background:#fefce8; border:1px solid #eab308; font-weight:600; }
-    .muted{ font-size:12px; color:#6b7280; margin-top:8px }
+    .controls{ display:flex; gap:10px; margin-top:8px }
+    button{ margin-top:18px; padding:12px 16px; border:none; border-radius:8px; background:linear-gradient(90deg,#0ea5e9,#38bdf8); color:#0f172a; font-weight:700; cursor:pointer; }
+    .ghost{ background:#1e293b; border:1px solid #38bdf8; color:#38bdf8; }
+    .muted{ font-size:12px; color:#94a3b8; margin-top:10px; text-align:center; }
+    .options{ display:flex; gap:12px; margin-top:8px; }
+    .chip{ flex:1; background:#0f172a; border:1px solid #38bdf8; border-radius:8px; padding:10px; text-align:center; cursor:pointer; }
+    .chip input{ margin-right:6px; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>SCL Studio — Accord de diffusion réseaux sociaux</h1>
+    <h1>SCL Studio — Accord de diffusion médias</h1>
     <div class="sub">Par Sébastien Castel-Leproust</div>
 
     <form id="form" novalidate>
       <label for="nom">Nom et prénom *</label>
       <input id="nom" required placeholder="Votre nom" autocomplete="name" />
 
-      <label for="date">Date du shooting *</label>
+      <label for="date">Date du shooting / tournage *</label>
       <input id="date" type="date" required />
 
+      <label>Type de média *</label>
+      <div class="options">
+        <label class="chip"><input type="checkbox" id="photo"/> Photo</label>
+        <label class="chip"><input type="checkbox" id="video"/> Vidéo / Interview</label>
+      </div>
+
       <div class="legal">
-        J’autorise Sébastien Castel-Leproust (SCL Studio) à utiliser et diffuser mon image issue de la séance photo indiquée ci-dessus sur ses réseaux sociaux, à des fins promotionnelles. Cette autorisation est consentie à titre gratuit et peut être révoquée par écrit pour les publications futures.
+        J’autorise Sébastien Castel-Leproust (SCL Studio) à utiliser et diffuser mon image et/ou ma voix issue de la séance photo / vidéo indiquée ci-dessus sur ses réseaux sociaux et supports audiovisuels, à des fins promotionnelles. Cette autorisation est consentie à titre gratuit et peut être révoquée par écrit pour les publications futures.
       </div>
 
       <label>Signature *</label>
@@ -63,7 +73,7 @@
       canvas.height=180*ratio;
       ctx.setTransform(1,0,0,1,0,0);
       ctx.scale(ratio,ratio);
-      ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#111827';
+      ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#f8fafc';
       redraw();
     }
     window.addEventListener('resize',resizeCanvas);
@@ -81,7 +91,10 @@
     document.getElementById('exportPDF').addEventListener('click',()=>{
       const nom=document.getElementById('nom').value.trim();
       const date=document.getElementById('date').value;
+      const isPhoto=document.getElementById('photo').checked;
+      const isVideo=document.getElementById('video').checked;
       if(!nom||!date){alert('Veuillez renseigner le nom et la date.');return;}
+      if(!isPhoto&&!isVideo){alert('Veuillez cocher Photo et/ou Vidéo.');return;}
       if(strokes.length===0){alert('Veuillez signer.');return;}
 
       const {jsPDF}=window.jspdf;
@@ -90,14 +103,16 @@
       let y=40;
 
       doc.setFont('helvetica','bold'); doc.setFontSize(18);
-      doc.text('SCL Studio — Accord de diffusion réseaux sociaux',pageW/2,y,{align:'center'});
+      doc.text('SCL Studio — Accord de diffusion médias',pageW/2,y,{align:'center'});
       y+=14;
       doc.setFont('helvetica','normal'); doc.setFontSize(12);
       doc.text(`Nom : ${nom}`,pageW/2,y,{align:'center'});
       y+=8;
-      doc.text(`Date du shooting : ${date}`,pageW/2,y,{align:'center'});
+      doc.text(`Date du shooting / tournage : ${date}`,pageW/2,y,{align:'center'});
+      y+=8;
+      doc.text(`Type : ${isPhoto?"Photo":""}${isPhoto&&isVideo?" + ":""}${isVideo?"Vidéo/Interview":""}`,pageW/2,y,{align:'center'});
       y+=14;
-      const autor="Autorisation : J’autorise Sébastien Castel-Leproust (SCL Studio) à diffuser mes images issues de cette séance sur ses réseaux sociaux, à des fins promotionnelles. Cette autorisation peut être révoquée par écrit pour les publications futures.";
+      const autor="Autorisation : J’autorise Sébastien Castel-Leproust (SCL Studio) à diffuser mon image et/ou ma voix issues de cette séance photo/vidéo sur ses réseaux sociaux et supports audiovisuels, à des fins promotionnelles. Cette autorisation peut être révoquée par écrit pour les publications futures.";
       let split=doc.splitTextToSize(autor,pageW-40);
       doc.text(split,pageW/2,y,{align:'center'});
       y+=split.length*6+16;
@@ -105,7 +120,7 @@
       const dataURL=canvas.toDataURL('image/png');
       doc.addImage(dataURL,'PNG',pageW/2-40,y-10,80,40);
       y+=50;
-      doc.setFontSize(9); doc.setTextColor(100);
+      doc.setFontSize(9); doc.setTextColor(150);
       doc.text(`Généré le ${new Date().toLocaleString()}`,pageW/2,y,{align:'center'});
 
       const filename=`accord_diffusion_${nom.replace(/\s+/g,'_')}_${date}.pdf`;
