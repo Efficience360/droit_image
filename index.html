@@ -33,7 +33,7 @@
       <input id="date" type="date" required />
 
       <div class="legal">
-        J’autorise Sébastien Castel‑Leproust (SCL Studio) à utiliser et diffuser mon image issue de la séance photo indiquée ci‑dessus sur ses réseaux sociaux, à des fins promotionnelles. Cette autorisation est consentie à titre gratuit et peut être révoquée par écrit pour les publications futures.
+        J’autorise Sébastien Castel-Leproust (SCL Studio) à utiliser et diffuser mon image issue de la séance photo indiquée ci-dessus sur ses réseaux sociaux, à des fins promotionnelles. Cette autorisation est consentie à titre gratuit et peut être révoquée par écrit pour les publications futures.
       </div>
 
       <label>Signature *</label>
@@ -46,7 +46,7 @@
       </div>
 
       <button type="button" id="exportPDF">Signer et exporter en PDF</button>
-      <div class="muted">Astuce iPhone : si le téléchargement ne démarre pas, un onglet PDF s’ouvrira — utilisez « Partager → Enregistrer dans Fichiers ».</div>
+      <div class="muted">Astuce iPhone : si le téléchargement ne démarre pas, un onglet PDF s’ouvrira — utilisez « Partager → Enregistrer dans Fichiers ».</div>
     </form>
   </div>
 
@@ -85,22 +85,29 @@
       if(strokes.length===0){alert('Veuillez signer.');return;}
 
       const {jsPDF}=window.jspdf;
-      const doc=new jsPDF({unit:'mm',format:'a4'});
-      let y=20;
-      doc.setFont('helvetica','bold'); doc.setFontSize(16);
-      doc.text('SCL Studio — Accord de diffusion réseaux sociaux',15,y); y+=12;
+      const doc=new jsPDF({unit:'mm',format:'a4',orientation:'landscape'});
+      const pageW=doc.internal.pageSize.getWidth();
+      let y=40;
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(18);
+      doc.text('SCL Studio — Accord de diffusion réseaux sociaux',pageW/2,y,{align:'center'});
+      y+=14;
       doc.setFont('helvetica','normal'); doc.setFontSize(12);
-      doc.text(`Nom : ${nom}`,15,y); y+=8;
-      doc.text(`Date du shooting : ${date}`,15,y); y+=12;
-      const autor="Autorisation : J’autorise Sébastien Castel‑Leproust (SCL Studio) à diffuser mes images issues de cette séance sur ses réseaux sociaux, à des fins promotionnelles. Cette autorisation peut être révoquée par écrit pour les publications futures.";
-      let split=doc.splitTextToSize(autor,180);
-      doc.text(split,15,y); y+=split.length*6+10;
-      doc.text('Signature :',15,y);
+      doc.text(`Nom : ${nom}`,pageW/2,y,{align:'center'});
+      y+=8;
+      doc.text(`Date du shooting : ${date}`,pageW/2,y,{align:'center'});
+      y+=14;
+      const autor="Autorisation : J’autorise Sébastien Castel-Leproust (SCL Studio) à diffuser mes images issues de cette séance sur ses réseaux sociaux, à des fins promotionnelles. Cette autorisation peut être révoquée par écrit pour les publications futures.";
+      let split=doc.splitTextToSize(autor,pageW-40);
+      doc.text(split,pageW/2,y,{align:'center'});
+      y+=split.length*6+16;
+      doc.text('Signature :',pageW/2,y,{align:'center'});
       const dataURL=canvas.toDataURL('image/png');
-      doc.addImage(dataURL,'PNG',45,y-8,80,40);
+      doc.addImage(dataURL,'PNG',pageW/2-40,y-10,80,40);
       y+=50;
       doc.setFontSize(9); doc.setTextColor(100);
-      doc.text(`Généré le ${new Date().toLocaleString()}`,15,y);
+      doc.text(`Généré le ${new Date().toLocaleString()}`,pageW/2,y,{align:'center'});
+
       const filename=`accord_diffusion_${nom.replace(/\s+/g,'_')}_${date}.pdf`;
       doc.save(filename);
     });
