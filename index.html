@@ -7,14 +7,16 @@
   <style>
     body{ margin:0; font-family: system-ui, sans-serif; background:#0f172a; color:#f8fafc; padding:20px; }
     .card{ max-width:700px; margin:0 auto; background:#1e293b; border:2px solid #38bdf8; border-radius:16px; padding:24px; box-shadow:0 6px 18px rgba(56,189,248,.35); }
+    header{text-align:center;margin-bottom:16px;}
+    header img{max-height:80px; width:auto; display:block; margin:0 auto 8px;}
     h1{ font-size:22px; margin:0 0 12px; color:#38bdf8; text-align:center; }
     .sub{ font-size:13px; color:#94a3b8; margin-bottom:16px; text-align:center; }
     label{ display:block; margin-top:14px; font-size:15px; font-weight:600; color:#e2e8f0; }
     input, select{ width:100%; padding:10px; border:1px solid #38bdf8; border-radius:8px; background:#0f172a; color:#f1f5f9; font-size:15px; }
     input:focus, select:focus{ outline:none; border-color:#0ea5e9; box-shadow:0 0 0 2px rgba(14,165,233,.4); }
     .legal{ font-size:13px; margin-top:18px; line-height:1.5; color:#cbd5e1; background:#0f172a; padding:12px; border-left:3px solid #38bdf8; border-radius:6px; }
-    .sig{ margin-top:16px; border:2px dashed #38bdf8; border-radius:12px; background:#0f172a; }
-    .sig canvas{ width:100%; height:180px; display:block; touch-action:none; }
+    .sig{ margin-top:16px; border:2px dashed #38bdf8; border-radius:12px; background:#ffffff; }
+    .sig canvas{ width:100%; height:180px; display:block; touch-action:none; background:#ffffff; }
     .controls{ display:flex; gap:10px; margin-top:8px }
     button{ margin-top:18px; padding:12px 16px; border:none; border-radius:8px; background:linear-gradient(90deg,#0ea5e9,#38bdf8); color:#0f172a; font-weight:700; cursor:pointer; }
     .ghost{ background:#1e293b; border:1px solid #38bdf8; color:#38bdf8; }
@@ -26,8 +28,11 @@
 </head>
 <body>
   <div class="card">
-    <h1>SCL Studio — Accord de diffusion médias</h1>
-    <div class="sub">Par Sébastien Castel-Leproust</div>
+    <header>
+      <img src="https://static.wixstatic.com/media/9c25f2_51308fe896d040c7975a92aae26de948~mv2.png" alt="Logo SCL Studio" />
+      <h1>SCL Studio — Accord de diffusion médias</h1>
+      <div class="sub">Par Sébastien Castel-Leproust</div>
+    </header>
 
     <form id="form" novalidate>
       <label for="nom">Nom et prénom *</label>
@@ -73,7 +78,7 @@
       canvas.height=180*ratio;
       ctx.setTransform(1,0,0,1,0,0);
       ctx.scale(ratio,ratio);
-      ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#f8fafc';
+      ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#000000'; // signature en noir
       redraw();
     }
     window.addEventListener('resize',resizeCanvas);
@@ -100,7 +105,11 @@
       const {jsPDF}=window.jspdf;
       const doc=new jsPDF({unit:'mm',format:'a4',orientation:'landscape'});
       const pageW=doc.internal.pageSize.getWidth();
-      let y=40;
+      let y=30;
+
+      const logoUrl="https://static.wixstatic.com/media/9c25f2_51308fe896d040c7975a92aae26de948~mv2.png";
+      doc.addImage(logoUrl,'PNG',pageW/2-20,10,40,40);
+      y+=40;
 
       doc.setFont('helvetica','bold'); doc.setFontSize(18);
       doc.text('SCL Studio — Accord de diffusion médias',pageW/2,y,{align:'center'});
@@ -110,7 +119,7 @@
       y+=8;
       doc.text(`Date du shooting / tournage : ${date}`,pageW/2,y,{align:'center'});
       y+=8;
-      doc.text(`Type : ${isPhoto?"Photo":""}${isPhoto&&isVideo?" + ":""}${isVideo?"Vidéo/Interview":""}`,pageW/2,y,{align:'center'});
+      doc.text(`Type : ${isPhoto?"Photo":""}${isPhoto&&isVideo?" + ":""}${isVideo?"Vidéo/Interview": ""}`,pageW/2,y,{align:'center'});
       y+=14;
       const autor="Autorisation : J’autorise Sébastien Castel-Leproust (SCL Studio) à diffuser mon image et/ou ma voix issues de cette séance photo/vidéo sur ses réseaux sociaux et supports audiovisuels, à des fins promotionnelles. Cette autorisation peut être révoquée par écrit pour les publications futures.";
       let split=doc.splitTextToSize(autor,pageW-40);
