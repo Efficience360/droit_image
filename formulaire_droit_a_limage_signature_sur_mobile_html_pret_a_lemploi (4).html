@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Accord diffusion réseaux sociaux</title>
+  <style>
+    body{
+      margin:0; font-family: system-ui, sans-serif;
+      background: #fffefc;
+      color:#1f2937;
+      padding:20px;
+    }
+    .card{
+      max-width:600px; margin:0 auto; background:#fff;
+      border:2px solid #facc15; border-radius:16px; padding:20px;
+      box-shadow:0 4px 12px rgba(250,204,21,.2);
+    }
+    h1{font-size:20px; margin-top:0; color:#92400e;}
+    label{display:block; margin-top:12px; font-size:14px;}
+    input{width:100%; padding:10px; border:1px solid #eab308; border-radius:8px; background:#fff8e1;}
+    .signature{margin-top:16px; border:2px dashed #facc15; border-radius:12px; background:#fff8e1;}
+    .signature canvas{width:100%; height:180px; display:block; touch-action:none;}
+    button{margin-top:16px; padding:12px 16px; border:none; border-radius:8px; background:#facc15; color:#78350f; font-weight:bold; cursor:pointer;}
+    .legal{font-size:13px; margin-top:16px; line-height:1.4;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Accord de diffusion — Réseaux sociaux</h1>
+    <form id="form">
+      <label for="nom">Nom et prénom *</label>
+      <input id="nom" required placeholder="Votre nom" />
+      
+      <label for="date">Date du shooting *</label>
+      <input id="date" type="date" required />
+
+      <div class="legal">
+        J’autorise Sébastien Castel-Leproust (SCL Studio) à utiliser et diffuser mon image issue de la séance photo indiquée ci-dessus sur ses réseaux sociaux, à titre promotionnel et non commercial.
+      </div>
+
+      <label>Signature *</label>
+      <div class="signature">
+        <canvas id="sig"></canvas>
+      </div>
+
+      <button type="button" id="exportPDF">Signer et exporter en PDF</button>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script>
+    const canvas = document.getElementById('sig');
+    const ctx = canvas.getContext('2d');
+    let drawing=false, strokes=[], current=[];
+
+    function resizeCanvas(){
+      const ratio = window.devicePixelRatio||1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width*ratio;
+      canvas.height = 180*ratio;
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(ratio,ratio);
+      ctx.lineWidth=2; ctx.lineCap='round'; ctx.strokeStyle='#111827';
+      redraw();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function pos(e){const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top};}
+
+    canvas.addEventListener('pointerdown',e=>{drawing=true;current=[pos(e)];});
+    canvas.addEventListener('pointermove',e=>{if(!drawing)return;const p=pos(e),l=current[current.length-1];ctx.beginPath();ctx.moveTo(l.x,l.y);ctx.lineTo(p.x,p.y);ctx.stroke();current.push(p);});
+    canvas.addEventListener('pointerup',()=>{if(drawing&&current.length>1)strokes.push(current);drawing=false;current=[];});
+
+    function redraw(){ctx.clearRect(0,0,canvas.width,canvas.height);strokes.forEach(s=>{for(let i=1;i<s.length;i++){ctx.beginPath();ctx.moveTo(s[i-1].x,s[i-1].y);ctx.lineTo(s[i].x,s[i].y);ctx.stroke();}})}
+
+    document.getElementById('exportPDF').addEventListener('click',()=>{
+      const nom=document.getElementById('nom').value.trim();
+      const date=document.getElementById('date').value;
+      if(!nom||!date||strokes.length===0){alert('Veuillez compléter tous les champs et signer.');return;}
+      const {jsPDF}=window.jspdf; const doc=new jsPDF();
+      doc.setFontSize(16); doc.text('Accord de diffusion — Réseaux sociaux',20,20);
+      doc.setFontSize(12);
+      doc.text(`Nom : ${nom}` ,20,40);
+      doc.text(`Date du shooting : ${date}`,20,55);
+      doc.text("Autorisation : J’autorise Sébastien Castel-Leproust (SCL Studio) à diffuser mes images issues de cette séance sur ses réseaux sociaux.",20,75,{maxWidth:170});
+      doc.text('Signature :',20,110);
+      doc.addImage(canvas.toDataURL('image/png'),'PNG',70,95,60,40);
+      doc.save(`accord_diffusion_${nom.replace(/\s+/g,'_')}_${date}.pdf`);
+    });
+
+    resizeCanvas();
+  </script>
+</body>
+</html>
