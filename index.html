@@ -5,23 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>SCL Studio — Accord diffusion réseaux sociaux</title>
   <style>
-    :root{ --gold:#facc15; --gold-2:#fbbf24; --ink:#1f2937; }
-    *{box-sizing:border-box}
-    body{ margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background:#fffefc; color:var(--ink); padding:20px; }
-    .card{ max-width:620px; margin:0 auto; background:#fff; border:2px solid var(--gold); border-radius:16px; padding:20px; box-shadow:0 6px 18px rgba(250,204,21,.22); }
+    body{ margin:0; font-family: system-ui, sans-serif; background:#fffefc; color:#1f2937; padding:20px; }
+    .card{ max-width:650px; margin:0 auto; background:#fff; border:2px solid #facc15; border-radius:16px; padding:20px; box-shadow:0 6px 18px rgba(250,204,21,.22); }
     h1{ font-size:20px; margin:0 0 10px; color:#92400e; }
-    .sub{ font-size:12px; color:#a16207; margin-bottom:10px }
+    .sub{ font-size:12px; color:#a16207; margin-bottom:12px }
     label{ display:block; margin-top:12px; font-size:14px; }
-    input{ width:100%; padding:10px; border:1px solid #eab308; border-radius:10px; background:#fff8e1; font-size:16px; }
+    input{ width:100%; padding:10px; border:1px solid #eab308; border-radius:8px; background:#fff8e1; font-size:15px; }
     .legal{ font-size:13px; margin-top:14px; line-height:1.45; }
-    .sig{ margin-top:12px; border:2px dashed var(--gold); border-radius:12px; background:#fff8e1; position:relative; }
+    .sig{ margin-top:12px; border:2px dashed #facc15; border-radius:12px; background:#fff8e1; }
     .sig canvas{ width:100%; height:180px; display:block; touch-action:none; }
-    .row{ display:flex; gap:10px; align-items:center; }
-    button{ margin-top:16px; padding:12px 16px; border:none; border-radius:10px; background:linear-gradient(90deg, var(--gold), var(--gold-2)); color:#78350f; font-weight:800; cursor:pointer; }
-    button[disabled]{ opacity:.6; cursor:not-allowed }
-    .muted{ font-size:12px; color:#6b7280; margin-top:6px }
-    .controls{ display:flex; gap:8px; margin-top:8px }
-    .ghost{ background:#fefce8; border:1px solid #eab308; font-weight:600 }
+    .controls{ display:flex; gap:8px; margin-top:6px }
+    button{ margin-top:16px; padding:12px 16px; border:none; border-radius:8px; background:linear-gradient(90deg, #facc15, #fbbf24); color:#78350f; font-weight:700; cursor:pointer; }
+    .ghost{ background:#fefce8; border:1px solid #eab308; font-weight:600; }
+    .muted{ font-size:12px; color:#6b7280; margin-top:8px }
   </style>
 </head>
 <body>
@@ -32,7 +28,7 @@
     <form id="form" novalidate>
       <label for="nom">Nom et prénom *</label>
       <input id="nom" required placeholder="Votre nom" autocomplete="name" />
-      
+
       <label for="date">Date du shooting *</label>
       <input id="date" type="date" required />
 
@@ -45,108 +41,70 @@
         <canvas id="sig"></canvas>
       </div>
       <div class="controls">
-        <button type="button" class="ghost" id="undo" aria-label="Annuler le dernier trait">↶ Annuler</button>
-        <button type="button" class="ghost" id="clear" aria-label="Effacer la signature">Effacer</button>
+        <button type="button" class="ghost" id="undo">↶ Annuler</button>
+        <button type="button" class="ghost" id="clear">Effacer</button>
       </div>
 
       <button type="button" id="exportPDF">Signer et exporter en PDF</button>
-      <div class="muted">Astuce iPhone : si le téléchargement ne démarre pas, un onglet PDF va s’ouvrir — utilisez l’icône de partage pour « Enregistrer dans Fichiers ».</div>
+      <div class="muted">Astuce iPhone : si le téléchargement ne démarre pas, un onglet PDF s’ouvrira — utilisez « Partager → Enregistrer dans Fichiers ».</div>
     </form>
   </div>
 
-  <!-- jsPDF via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script>
-    // ——— Signature (robuste mobile) ———
-    const canvas = document.getElementById('sig');
-    const ctx = canvas.getContext('2d');
+    const canvas=document.getElementById('sig');
+    const ctx=canvas.getContext('2d');
     let drawing=false, strokes=[], current=[];
 
     function resizeCanvas(){
-      const ratio = Math.max(window.devicePixelRatio||1,1);
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width*ratio;
-      canvas.height = 180*ratio;
-      ctx.setTransform(1,0,0,1,0,0); // reset
+      const ratio=Math.max(window.devicePixelRatio||1,1);
+      const rect=canvas.getBoundingClientRect();
+      canvas.width=rect.width*ratio;
+      canvas.height=180*ratio;
+      ctx.setTransform(1,0,0,1,0,0);
       ctx.scale(ratio,ratio);
       ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#111827';
       redraw();
     }
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize',resizeCanvas);
 
-    function pos(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+    function pos(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+    canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')e.preventDefault();canvas.setPointerCapture(e.pointerId);drawing=true;current=[pos(e)];},{passive:false});
+    canvas.addEventListener('pointermove',e=>{if(!drawing)return;const p=pos(e),l=current[current.length-1];ctx.beginPath();ctx.moveTo(l.x,l.y);ctx.lineTo(p.x,p.y);ctx.stroke();current.push(p);},{passive:false});
+    canvas.addEventListener('pointerup',()=>{if(drawing&&current.length>1)strokes.push(current);drawing=false;current=[];});
+    canvas.addEventListener('pointercancel',()=>{drawing=false;current=[];});
 
-    canvas.addEventListener('pointerdown', e=>{ if(e.pointerType==='touch') e.preventDefault(); canvas.setPointerCapture(e.pointerId); drawing=true; current=[pos(e)]; }, {passive:false});
-    canvas.addEventListener('pointermove', e=>{ if(!drawing) return; const p=pos(e), l=current[current.length-1]; ctx.beginPath(); ctx.moveTo(l.x,l.y); ctx.lineTo(p.x,p.y); ctx.stroke(); current.push(p); }, {passive:false});
-    canvas.addEventListener('pointerup', ()=>{ if(drawing && current.length>1) strokes.push(current); drawing=false; current=[]; });
-    canvas.addEventListener('pointercancel', ()=>{ drawing=false; current=[]; });
+    function redraw(){ctx.clearRect(0,0,canvas.width,canvas.height);strokes.forEach(s=>{for(let i=1;i<s.length;i++){const a=s[i-1],b=s[i];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}})}
+    document.getElementById('clear').addEventListener('click',()=>{strokes=[];redraw();});
+    document.getElementById('undo').addEventListener('click',()=>{strokes.pop();redraw();});
 
-    function redraw(){
-      const r = canvas.getBoundingClientRect();
-      ctx.clearRect(0,0,r.width,180);
-      strokes.forEach(s=>{ for(let i=1;i<s.length;i++){ const a=s[i-1], b=s[i]; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); } });
-    }
+    document.getElementById('exportPDF').addEventListener('click',()=>{
+      const nom=document.getElementById('nom').value.trim();
+      const date=document.getElementById('date').value;
+      if(!nom||!date){alert('Veuillez renseigner le nom et la date.');return;}
+      if(strokes.length===0){alert('Veuillez signer.');return;}
 
-    document.getElementById('clear').addEventListener('click', ()=>{ strokes=[]; redraw(); });
-    document.getElementById('undo').addEventListener('click', ()=>{ strokes.pop(); redraw(); });
-
-    // ——— Export PDF (avec fallback iOS) ———
-    const btn = document.getElementById('exportPDF');
-    btn.addEventListener('click', async ()=>{
-      const nom = document.getElementById('nom').value.trim();
-      const date = document.getElementById('date').value;
-      if(!nom || !date){ alert('Veuillez renseigner le nom et la date.'); return; }
-      if(strokes.length===0){ alert('Veuillez signer.'); return; }
-
-      btn.disabled = true; const original = btn.textContent; btn.textContent = 'Génération…';
-      // s'assurer que le canvas est à jour
-      resizeCanvas(); await new Promise(r=>requestAnimationFrame(r));
-
-      const jspdfNS = window.jspdf || {};
-      const jsPDF = jspdfNS.jsPDF;
-      if(!jsPDF){ btn.disabled=false; btn.textContent=original; alert("Impossible de charger le module PDF. Vérifiez la connexion internet."); return; }
-
-      try{
-        const doc = new jsPDF({ unit:'mm', format:'a4' });
-        doc.setFont('helvetica','bold'); doc.setFontSize(16);
-        doc.text('SCL Studio — Accord de diffusion réseaux sociaux', 15, 18);
-        doc.setFont('helvetica','normal'); doc.setFontSize(11);
-        doc.text(`Nom : ${nom}`, 15, 32);
-        doc.text(`Date du shooting : ${date}`, 15, 40);
-        const autor = "Autorisation : J’autorise Sébastien Castel‑Leproust (SCL Studio) à diffuser mes images issues de cette séance sur ses réseaux sociaux, à des fins promotionnelles. Cette autorisation peut être révoquée par écrit pour les publications futures.";
-        doc.text(autor, 15, 52, { maxWidth: 180 });
-        doc.text('Signature :', 15, 90);
-        const dataURL = canvas.toDataURL('image/png');
-        doc.addImage(dataURL, 'PNG', 45, 78, 60, 40);
-        // horodatage
-        doc.setFontSize(9); doc.setTextColor(120);
-        doc.text(`Généré le ${new Date().toLocaleString()}`, 15, 115);
-
-        const filename = `accord_diffusion_${nom.replace(/\s+/g,'_')}_${date}.pdf`;
-        try{
-          // Méthode standard
-          doc.save(filename);
-        }catch(e){
-          // Fallback iOS / navigateurs restrictifs
-          const blob = doc.output('blob');
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click();
-          setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1500);
-        }
-      } catch (err){
-        console.error(err);
-        try{
-          // dernier recours: ouverture dans un onglet
-          const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit:'mm', format:'a4' });
-          doc.text('Erreur lors de la génération automatique. Aperçu PDF ci‑joint.', 15, 20);
-          const url = URL.createObjectURL(doc.output('blob')); window.open(url, '_blank');
-        } catch(_e) { alert('Impossible de générer le PDF sur ce navigateur.'); }
-      } finally {
-        btn.disabled = false; btn.textContent = original;
-      }
+      const {jsPDF}=window.jspdf;
+      const doc=new jsPDF({unit:'mm',format:'a4'});
+      let y=20;
+      doc.setFont('helvetica','bold'); doc.setFontSize(16);
+      doc.text('SCL Studio — Accord de diffusion réseaux sociaux',15,y); y+=12;
+      doc.setFont('helvetica','normal'); doc.setFontSize(12);
+      doc.text(`Nom : ${nom}`,15,y); y+=8;
+      doc.text(`Date du shooting : ${date}`,15,y); y+=12;
+      const autor="Autorisation : J’autorise Sébastien Castel‑Leproust (SCL Studio) à diffuser mes images issues de cette séance sur ses réseaux sociaux, à des fins promotionnelles. Cette autorisation peut être révoquée par écrit pour les publications futures.";
+      let split=doc.splitTextToSize(autor,180);
+      doc.text(split,15,y); y+=split.length*6+10;
+      doc.text('Signature :',15,y);
+      const dataURL=canvas.toDataURL('image/png');
+      doc.addImage(dataURL,'PNG',45,y-8,80,40);
+      y+=50;
+      doc.setFontSize(9); doc.setTextColor(100);
+      doc.text(`Généré le ${new Date().toLocaleString()}`,15,y);
+      const filename=`accord_diffusion_${nom.replace(/\s+/g,'_')}_${date}.pdf`;
+      doc.save(filename);
     });
 
-    // init
     requestAnimationFrame(resizeCanvas);
   </script>
 </body>
